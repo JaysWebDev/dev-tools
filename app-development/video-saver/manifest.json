@@ -1,0 +1,23 @@
+{
+  "manifest_version": 3,
+  "name": "Video Auto Saver",
+  "version": "1.0.0",
+  "description": "Auto-detects and downloads video files from any page",
+  "permissions": [
+    "activeTab",
+    "scripting",
+    "downloads",
+    "storage",
+    "webRequest"
+  ],
+  "host_permissions": [
+    "<all_urls>"
+  ],
+  "action": {
+    "default_popup": "popup.html",
+    "default_title": "Video Auto Saver"
+  },
+  "background": {
+    "service_worker": "background.js"
+  }
+}

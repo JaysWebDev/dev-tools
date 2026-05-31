@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Video Auto Saver</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      width: 360px;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: #fff; color: #333;
+    }
+    .container { padding: 18px; display: flex; flex-direction: column; gap: 12px; }
+
+    .header {
+      display: flex; align-items: center; gap: 12px;
+      padding-bottom: 12px; border-bottom: 2px solid #c0392b;
+    }
+    .header .icon {
+      width: 40px; height: 40px;
+      background: #c0392b; border-radius: 10px;
+      display: flex; align-items: center; justify-content: center;
+      color: #fff; font-size: 20px;
+    }
+    .header h1 { font-size: 16px; color: #1a1a1a; }
+    .header p { font-size: 11px; color: #888; margin-top: 2px; }
+
+    .toggle-row {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 12px; background: #f7f7f9; border-radius: 8px;
+    }
+    .toggle-row span { font-size: 14px; font-weight: 600; }
+
+    .toggle {
+      position: relative; width: 50px; height: 26px;
+      background: #ccc; border-radius: 13px; cursor: pointer;
+      transition: background 0.3s;
+    }
+    .toggle.on { background: #28a745; }
+    .toggle .knob {
+      position: absolute; top: 3px; left: 3px;
+      width: 20px; height: 20px; background: #fff;
+      border-radius: 50%; transition: left 0.3s;
+    }
+    .toggle.on .knob { left: 27px; }
+
+    .stats {
+      display: grid; grid-template-columns: 1fr 1fr 1fr;
+      gap: 8px; text-align: center;
+    }
+    .stat-box {
+      background: #f7f7f9; padding: 10px; border-radius: 8px;
+    }
+    .stat-box .num { font-size: 22px; font-weight: 700; color: #1a1a1a; }
+    .stat-box .label { font-size: 10px; color: #888; text-transform: uppercase; }
+
+    button {
+      padding: 10px; border: none; border-radius: 8px;
+      font-size: 13px; font-weight: 600; cursor: pointer;
+      transition: all 0.2s; width: 100%;
+    }
+    .btn-scan { background: #c0392b; color: #fff; }
+    .btn-scan:hover { background: #a93226; }
+    .btn-clear { background: #eee; color: #666; }
+    .btn-clear:hover { background: #ddd; }
+
+    #videoLog {
+      max-height: 150px; overflow-y: auto; font-size: 11px;
+      background: #f9f9f9; border-radius: 6px; padding: 8px;
+      display: none;
+    }
+    #videoLog.active { display: block; }
+    #videoLog .log-item {
+      padding: 3px 0; border-bottom: 1px solid #eee;
+      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    }
+    #videoLog .log-time { color: #888; font-size: 10px; }
+
+    .info {
+      font-size: 11px; color: #888; line-height: 1.5;
+      background: #f7f7f9; padding: 10px; border-radius: 6px;
+      border-left: 3px solid #c0392b;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <div class="icon">V</div>
+      <div>
+        <h1>Video Auto Saver</h1>
+        <p>Auto-detect and download videos</p>
+      </div>
+    </div>
+
+    <div class="toggle-row">
+      <span id="toggleLabel">OFF</span>
+      <div id="toggle" class="toggle">
+        <div class="knob"></div>
+      </div>
+    </div>
+
+    <div class="stats">
+      <div class="stat-box">
+        <div class="num" id="statDetected">0</div>
+        <div class="label">Detected</div>
+      </div>
+      <div class="stat-box">
+        <div class="num" id="statDownloaded">0</div>
+        <div class="label">Saved</div>
+      </div>
+      <div class="stat-box">
+        <div class="num" id="statFailed">0</div>
+        <div class="label">Failed</div>
+      </div>
+    </div>
+
+    <button id="btnScan" class="btn-scan">Scan This Page for Videos</button>
+
+    <div id="videoLog"></div>
+
+    <button id="btnClear" class="btn-clear">Clear History</button>
+
+    <div class="info">
+      <strong>How it works:</strong> Toggle ON, then browse normally.
+      Videos are detected via network requests and page scanning.
+      Saved to Downloads/VideoSaver/ folder.
+    </div>
+  </div>
+
+  <script src="popup.js"></script>
+</body>
+</html>

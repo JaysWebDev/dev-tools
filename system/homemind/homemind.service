@@ -1,0 +1,37 @@
+[Unit]
+Description=HomeMind Local AI Appliance
+Documentation=https://github.com/openclaw/homemind
+After=network.target avahi-daemon.service
+Wants=avahi-daemon.service
+
+[Service]
+Type=simple
+User=__SERVICE_USER__
+WorkingDirectory=__INSTALL_DIR__
+ExecStart=__VENV_DIR__/bin/python -m uvicorn main:app \
+    --host 0.0.0.0 \
+    --port 8080 \
+    --loop uvloop \
+    --log-level info
+
+# Env overrides — adjust N_THREADS if you want to leave more for other tasks
+Environment=HOMEMIND_DIR=__INSTALL_DIR__
+Environment=HOMEMIND_PORT=8080
+Environment=HOMEMIND_CTX=2048
+
+Restart=always
+RestartSec=5
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=homemind
+
+# OOM: restart rather than stay dead
+OOMPolicy=restart
+
+# Hard memory cap — prevents the LLM from eating everything on 4 GB Pi
+# Adjust to ~85% of your total RAM (e.g. 3400M for 4 GB, 6800M for 8 GB)
+MemoryMax=85%
+MemorySwapMax=0
+
+[Install]
+WantedBy=multi-user.target

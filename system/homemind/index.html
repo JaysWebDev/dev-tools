@@ -1,0 +1,590 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>HomeMind</title>
+<style>
+  :root {
+    --bg:        #0d0d0d;
+    --surface:   #161616;
+    --border:    #2a2a2a;
+    --accent:    #00c896;
+    --accent-dim:#007a5a;
+    --warn:      #f0a500;
+    --text:      #e8e8e8;
+    --text-dim:  #888;
+    --user-bg:   #1a3a2e;
+    --ai-bg:     #1c1c1c;
+    --radius:    12px;
+    --mono:      "JetBrains Mono", "Fira Code", ui-monospace, monospace;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { height: 100%; background: var(--bg); color: var(--text); font-family: system-ui, -apple-system, sans-serif; font-size: 15px; }
+
+  /* ── Layout ── */
+  .app { display: flex; flex-direction: column; height: 100vh; max-width: 860px; margin: 0 auto; }
+
+  /* ── Header ── */
+  header {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 14px 20px; border-bottom: 1px solid var(--border);
+    background: var(--surface);
+  }
+  .brand { display: flex; align-items: center; gap: 10px; }
+  .brand-dot {
+    width: 10px; height: 10px; border-radius: 50%;
+    background: var(--accent); box-shadow: 0 0 8px var(--accent);
+    animation: pulse 2.5s ease-in-out infinite;
+  }
+  .brand-dot.warn  { background: var(--warn);  box-shadow: 0 0 8px var(--warn); }
+  .brand-dot.error { background: #e05252; box-shadow: 0 0 8px #e05252; }
+  @keyframes pulse { 0%,100% { opacity:1; } 50% { opacity:.4; } }
+  .brand-name { font-size: 18px; font-weight: 700; letter-spacing: -0.3px; color: var(--accent); }
+  .brand-sub  { font-size: 11px; color: var(--text-dim); margin-top: 1px; }
+
+  /* ── Status bar ── */
+  .status-bar {
+    display: flex; gap: 18px; align-items: center; flex-wrap: wrap;
+    padding: 10px 20px; background: var(--surface); border-bottom: 1px solid var(--border);
+    font-size: 12px; color: var(--text-dim); font-family: var(--mono);
+  }
+  .stat { display: flex; gap: 5px; align-items: center; }
+  .stat-label { color: #555; }
+  .stat-value { color: var(--text-dim); }
+  .stat-value.good   { color: var(--accent); }
+  .stat-value.warn   { color: var(--warn); }
+  .stat-value.error  { color: #e05252; }
+
+  /* ── Model selector ── */
+  .model-bar {
+    display: flex; align-items: center; gap: 10px;
+    padding: 10px 20px; border-bottom: 1px solid var(--border);
+    background: var(--bg);
+  }
+  .model-bar label { font-size: 12px; color: var(--text-dim); white-space: nowrap; }
+  #model-select {
+    flex: 1; background: var(--surface); color: var(--text);
+    border: 1px solid var(--border); border-radius: 8px;
+    padding: 7px 12px; font-size: 13px; font-family: var(--mono);
+    outline: none; cursor: pointer; max-width: 420px;
+  }
+  #model-select:focus { border-color: var(--accent); }
+  #reload-btn {
+    background: transparent; border: 1px solid var(--border);
+    color: var(--text-dim); border-radius: 8px; padding: 7px 14px;
+    font-size: 12px; cursor: pointer; white-space: nowrap;
+  }
+  #reload-btn:hover { border-color: var(--accent); color: var(--accent); }
+  #reload-btn:disabled { opacity: .4; cursor: not-allowed; }
+
+  /* ── Chat area ── */
+  #chat {
+    flex: 1; overflow-y: auto; padding: 20px;
+    display: flex; flex-direction: column; gap: 16px;
+    scroll-behavior: smooth;
+  }
+  #chat::-webkit-scrollbar { width: 4px; }
+  #chat::-webkit-scrollbar-track { background: transparent; }
+  #chat::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
+
+  .msg { display: flex; flex-direction: column; gap: 4px; }
+  .msg.user  { align-items: flex-end; }
+  .msg.ai    { align-items: flex-start; }
+
+  .bubble {
+    max-width: 78%; padding: 12px 16px; border-radius: var(--radius);
+    line-height: 1.6; word-break: break-word;
+  }
+  .msg.user .bubble { background: var(--user-bg); border-bottom-right-radius: 3px; }
+  .msg.ai   .bubble { background: var(--ai-bg);   border-bottom-left-radius: 3px; border: 1px solid var(--border); }
+
+  .msg-meta { font-size: 10px; color: #444; padding: 0 4px; }
+
+  /* inline code */
+  .bubble code {
+    font-family: var(--mono); font-size: 13px;
+    background: #222; border-radius: 4px; padding: 1px 5px;
+  }
+  /* code blocks */
+  .bubble pre {
+    background: #111; border: 1px solid var(--border);
+    border-radius: 8px; padding: 12px; overflow-x: auto;
+    margin: 8px 0; font-family: var(--mono); font-size: 13px; line-height: 1.5;
+  }
+  .bubble pre code { background: none; padding: 0; }
+
+  /* easter egg style */
+  .bubble em { color: var(--accent); font-style: normal; font-size: 13px; }
+
+  /* ── Loading spinner ── */
+  .typing {
+    display: flex; align-items: center; gap: 8px;
+    padding: 12px 16px; background: var(--ai-bg);
+    border: 1px solid var(--border); border-radius: var(--radius);
+    border-bottom-left-radius: 3px; max-width: 120px;
+  }
+  .dot {
+    width: 7px; height: 7px; border-radius: 50%; background: var(--accent);
+    animation: bounce 1.2s ease-in-out infinite;
+  }
+  .dot:nth-child(2) { animation-delay: .15s; }
+  .dot:nth-child(3) { animation-delay: .30s; }
+  @keyframes bounce { 0%,80%,100% { transform: translateY(0); opacity:.5; } 40% { transform: translateY(-6px); opacity:1; } }
+
+  /* ── Welcome card ── */
+  .welcome {
+    margin: auto; text-align: center; padding: 40px 20px; max-width: 420px;
+  }
+  .welcome-icon { font-size: 52px; margin-bottom: 16px; }
+  .welcome h2 { font-size: 20px; font-weight: 600; color: var(--accent); margin-bottom: 8px; }
+  .welcome p  { color: var(--text-dim); font-size: 14px; line-height: 1.6; }
+
+  /* ── Input bar ── */
+  .input-bar {
+    display: flex; gap: 10px; padding: 14px 20px;
+    border-top: 1px solid var(--border); background: var(--surface);
+  }
+  #prompt {
+    flex: 1; background: var(--bg); color: var(--text);
+    border: 1px solid var(--border); border-radius: var(--radius);
+    padding: 12px 16px; font-size: 15px; outline: none; resize: none;
+    max-height: 120px; line-height: 1.5; font-family: inherit;
+  }
+  #prompt:focus { border-color: var(--accent); }
+  #prompt::placeholder { color: #444; }
+
+  #send-btn {
+    background: var(--accent); color: #000;
+    border: none; border-radius: var(--radius);
+    padding: 0 22px; font-size: 18px; font-weight: 700;
+    cursor: pointer; min-width: 52px; transition: background .15s;
+  }
+  #send-btn:hover:not(:disabled) { background: #00e6ac; }
+  #send-btn:disabled { background: var(--accent-dim); cursor: not-allowed; opacity: .6; }
+
+  /* ── Loading overlay (model swap) ── */
+  #overlay {
+    display: none; position: fixed; inset: 0;
+    background: rgba(0,0,0,.75); z-index: 100;
+    flex-direction: column; align-items: center; justify-content: center; gap: 20px;
+  }
+  #overlay.show { display: flex; }
+  .spinner {
+    width: 48px; height: 48px; border: 4px solid var(--border);
+    border-top-color: var(--accent); border-radius: 50%;
+    animation: spin .8s linear infinite;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  #overlay p { color: var(--text-dim); font-size: 14px; font-family: var(--mono); }
+
+  /* ── Responsive ── */
+  @media (max-width: 540px) {
+    .status-bar { gap: 10px; font-size: 11px; }
+    .bubble { max-width: 92%; }
+    .brand-name { font-size: 16px; }
+  }
+</style>
+</head>
+<body>
+
+<!-- Loading overlay (shown during model swap) -->
+<div id="overlay">
+  <div class="spinner"></div>
+  <p id="overlay-msg">Loading model…</p>
+</div>
+
+<div class="app">
+
+  <!-- Header -->
+  <header>
+    <div class="brand">
+      <div class="brand-dot" id="status-dot"></div>
+      <div>
+        <div class="brand-name">HomeMind</div>
+        <div class="brand-sub">Local AI — 100% offline</div>
+      </div>
+    </div>
+    <div style="font-size:12px; color:#444; font-family: var(--mono);" id="uptime-label">
+      starting…
+    </div>
+  </header>
+
+  <!-- System status bar -->
+  <div class="status-bar">
+    <div class="stat">
+      <span class="stat-label">MODEL</span>
+      <span class="stat-value" id="s-model">—</span>
+    </div>
+    <div class="stat">
+      <span class="stat-label">ACCEL</span>
+      <span class="stat-value" id="s-accel">—</span>
+    </div>
+    <div class="stat">
+      <span class="stat-label">CPU</span>
+      <span class="stat-value" id="s-cpu">—</span>
+    </div>
+    <div class="stat">
+      <span class="stat-label">RAM</span>
+      <span class="stat-value" id="s-ram">—</span>
+    </div>
+    <div class="stat">
+      <span class="stat-label">TEMP</span>
+      <span class="stat-value" id="s-temp">—</span>
+    </div>
+    <div class="stat">
+      <span class="stat-label">CTX</span>
+      <span class="stat-value" id="s-ctx">—</span>
+    </div>
+  </div>
+
+  <!-- Model selector -->
+  <div class="model-bar">
+    <label for="model-select">Model</label>
+    <select id="model-select">
+      <option value="">Loading…</option>
+    </select>
+    <button id="reload-btn" onclick="swapModel()">Load</button>
+  </div>
+
+  <!-- Chat messages -->
+  <div id="chat">
+    <div class="welcome" id="welcome-card">
+      <div class="welcome-icon">🧠</div>
+      <h2>Your private AI is ready</h2>
+      <p>Running locally on this device. No internet required.<br>
+         Your conversations never leave this hardware.</p>
+    </div>
+  </div>
+
+  <!-- Input -->
+  <div class="input-bar">
+    <textarea id="prompt" rows="1" placeholder="Ask anything…"></textarea>
+    <button id="send-btn" onclick="send()">↑</button>
+  </div>
+
+</div>
+
+<script>
+// ── State ─────────────────────────────────────────────────────────────────────
+let currentModel  = null;
+let isGenerating  = false;
+let healthTimer   = null;
+let modelsLoaded  = false;
+
+// ── Init ──────────────────────────────────────────────────────────────────────
+window.addEventListener('DOMContentLoaded', () => {
+  refreshHealth();
+  refreshModels();
+  healthTimer = setInterval(refreshHealth, 4000);
+
+  const ta = document.getElementById('prompt');
+  ta.addEventListener('keydown', e => {
+    if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); send(); }
+  });
+  // Auto-resize textarea
+  ta.addEventListener('input', () => {
+    ta.style.height = 'auto';
+    ta.style.height = Math.min(ta.scrollHeight, 120) + 'px';
+  });
+});
+
+// ── Health polling ────────────────────────────────────────────────────────────
+async function refreshHealth() {
+  try {
+    const r = await fetch('/health');
+    if (!r.ok) throw new Error(r.status);
+    const d = await r.json();
+
+    // Status dot
+    const dot = document.getElementById('status-dot');
+    dot.className = 'brand-dot' + (d.status === 'ok' ? '' : ' warn');
+
+    // Uptime
+    document.getElementById('uptime-label').textContent =
+      'up ' + fmtUptime(d.uptime_s);
+
+    // Stats
+    setText('s-model', d.model ? shortName(d.model) : 'none', d.model ? 'good' : 'warn');
+    setText('s-accel', d.acceleration || '—', d.gpu_layers ? 'good' : '');
+    setText('s-cpu',   d.cpu_pct != null ? d.cpu_pct.toFixed(0) + '%' : '—',
+            cpuClass(d.cpu_pct));
+    setText('s-ram',   d.ram_pct != null
+            ? `${d.ram_used_mb}/${d.ram_total_mb} MB (${d.ram_pct.toFixed(0)}%)`
+            : '—', ramClass(d.ram_pct));
+    setText('s-temp',  d.cpu_temp_c != null ? d.cpu_temp_c + '°C' : '—',
+            tempClass(d.cpu_temp_c));
+    setText('s-ctx',   d.n_ctx ? d.n_ctx.toLocaleString() : '—');
+
+    // Sync model dropdown to loaded model
+    if (d.model && d.model !== currentModel) {
+      currentModel = d.model;
+      syncDropdown(d.model);
+    }
+
+  } catch {
+    document.getElementById('status-dot').className = 'brand-dot error';
+    document.getElementById('uptime-label').textContent = 'offline';
+  }
+}
+
+// ── Models ────────────────────────────────────────────────────────────────────
+async function refreshModels() {
+  try {
+    const r = await fetch('/models');
+    if (!r.ok) return;
+    const d = await r.json();
+    const sel = document.getElementById('model-select');
+    sel.innerHTML = '';
+
+    if (!d.models.length) {
+      sel.innerHTML = '<option value="">No models found in /models/</option>';
+      return;
+    }
+    d.models.forEach(m => {
+      const opt = document.createElement('option');
+      opt.value    = m.filename;
+      opt.textContent = `${m.filename}  (${m.size_mb} MB)${m.loaded ? ' ✓' : ''}`;
+      if (m.loaded) { opt.selected = true; currentModel = m.filename; }
+      sel.appendChild(opt);
+    });
+    modelsLoaded = true;
+  } catch { /* ignore */ }
+}
+
+function syncDropdown(filename) {
+  const sel = document.getElementById('model-select');
+  for (const opt of sel.options) {
+    if (opt.value === filename) { opt.selected = true; break; }
+  }
+}
+
+async function swapModel() {
+  const sel = document.getElementById('model-select');
+  const model = sel.value;
+  if (!model || model === currentModel) return;
+
+  showOverlay(`Loading ${shortName(model)}…`);
+  document.getElementById('reload-btn').disabled = true;
+
+  try {
+    const r = await fetch('/reload', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ model }),
+    });
+    const d = await r.json();
+    if (!r.ok) throw new Error(d.detail || 'swap failed');
+    currentModel = d.model;
+    await refreshModels();
+  } catch (err) {
+    addSystemMsg('⚠ Model swap failed: ' + err.message);
+  } finally {
+    hideOverlay();
+    document.getElementById('reload-btn').disabled = false;
+  }
+}
+
+// ── Chat ──────────────────────────────────────────────────────────────────────
+async function send() {
+  if (isGenerating) return;
+  const ta  = document.getElementById('prompt');
+  const msg = ta.value.trim();
+  if (!msg) return;
+
+  ta.value = '';
+  ta.style.height = 'auto';
+  hideWelcome();
+
+  addUserMsg(msg);
+  const aiBubble = addAIMsg('');
+  setGenerating(true);
+
+  try {
+    const body = {
+      message:  msg,
+      model:    currentModel || undefined,
+      stream:   true,
+    };
+    const res = await fetch('/chat', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body),
+    });
+
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({ detail: 'unknown error' }));
+      aiBubble.innerHTML = `<em>Error: ${err.detail}</em>`;
+      return;
+    }
+
+    const reader  = res.body.getReader();
+    const decoder = new TextDecoder();
+    let   buffer  = '';
+    let   text    = '';
+
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      buffer += decoder.decode(value, { stream: true });
+
+      const lines = buffer.split('\n');
+      buffer = lines.pop() ?? '';
+
+      for (const line of lines) {
+        if (!line.startsWith('data: ')) continue;
+        const payload = line.slice(6).trim();
+        if (payload === '[DONE]') break;
+        try {
+          const chunk = JSON.parse(payload);
+          if (chunk.error) { aiBubble.innerHTML += `\n⚠ ${chunk.error}`; break; }
+          if (chunk.token) {
+            text += chunk.token;
+            aiBubble.innerHTML = renderMarkdown(text);
+            scrollChat();
+          }
+        } catch { /* skip malformed */ }
+      }
+    }
+  } catch (err) {
+    aiBubble.innerHTML = `<em>Connection error: ${err.message}</em>`;
+  } finally {
+    setGenerating(false);
+  }
+}
+
+// ── DOM helpers ───────────────────────────────────────────────────────────────
+function addUserMsg(text) {
+  const div = document.createElement('div');
+  div.className = 'msg user';
+  div.innerHTML = `
+    <div class="bubble">${escHtml(text)}</div>
+    <div class="msg-meta">${now()}</div>
+  `;
+  document.getElementById('chat').appendChild(div);
+  scrollChat();
+}
+
+function addAIMsg(text) {
+  // Remove typing indicator if present
+  const ti = document.getElementById('typing-indicator');
+  if (ti) ti.remove();
+
+  // Add typing indicator while streaming begins
+  const typing = document.createElement('div');
+  typing.id = 'typing-indicator';
+  typing.className = 'msg ai';
+  typing.innerHTML = '<div class="typing"><div class="dot"></div><div class="dot"></div><div class="dot"></div></div>';
+  document.getElementById('chat').appendChild(typing);
+  scrollChat();
+
+  const div = document.createElement('div');
+  div.className = 'msg ai';
+  const bubble = document.createElement('div');
+  bubble.className = 'bubble';
+  bubble.innerHTML = text;
+  const meta = document.createElement('div');
+  meta.className = 'msg-meta';
+  meta.textContent = now() + ' · ' + (currentModel ? shortName(currentModel) : 'local');
+  div.appendChild(bubble);
+  div.appendChild(meta);
+  document.getElementById('chat').appendChild(div);
+
+  // Remove typing indicator once first token arrives
+  const origSet = Object.getOwnPropertyDescriptor(Element.prototype, 'innerHTML').set;
+  let first = true;
+  Object.defineProperty(bubble, 'innerHTML', {
+    set(v) {
+      if (first) {
+        first = false;
+        const ti2 = document.getElementById('typing-indicator');
+        if (ti2) ti2.remove();
+      }
+      origSet.call(this, v);
+    },
+    get() { return this.textContent; },
+  });
+
+  return bubble;
+}
+
+function addSystemMsg(text) {
+  const div = document.createElement('div');
+  div.style.cssText = 'text-align:center;color:#555;font-size:12px;padding:4px 0';
+  div.textContent = text;
+  document.getElementById('chat').appendChild(div);
+}
+
+function hideWelcome() {
+  const w = document.getElementById('welcome-card');
+  if (w) w.remove();
+}
+
+function setGenerating(v) {
+  isGenerating = v;
+  document.getElementById('send-btn').disabled  = v;
+  document.getElementById('prompt').disabled     = v;
+}
+
+function scrollChat() {
+  const c = document.getElementById('chat');
+  c.scrollTop = c.scrollHeight;
+}
+
+function showOverlay(msg) {
+  document.getElementById('overlay-msg').textContent = msg;
+  document.getElementById('overlay').classList.add('show');
+}
+function hideOverlay() {
+  document.getElementById('overlay').classList.remove('show');
+}
+
+function setText(id, val, cls) {
+  const el = document.getElementById(id);
+  el.textContent  = val;
+  el.className    = 'stat-value' + (cls ? ' ' + cls : '');
+}
+
+// ── Formatting ────────────────────────────────────────────────────────────────
+function escHtml(s) {
+  return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+
+function renderMarkdown(text) {
+  // Minimal markdown: code blocks, inline code, bold, italic, easter-egg em
+  let s = escHtml(text);
+  // Code blocks
+  s = s.replace(/```[\w]*\n?([\s\S]*?)```/g, '<pre><code>$1</code></pre>');
+  // Inline code
+  s = s.replace(/`([^`]+)`/g, '<code>$1</code>');
+  // Bold
+  s = s.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
+  // Italic / easter egg (wrapped in * ... *)
+  s = s.replace(/\*([^*]+)\*/g, '<em>$1</em>');
+  // Newlines
+  s = s.replace(/\n/g, '<br>');
+  // HR
+  s = s.replace(/---/g, '<hr style="border-color:var(--border);margin:8px 0">');
+  return s;
+}
+
+function shortName(filename) {
+  return filename.replace(/\.gguf$/i, '').slice(0, 28);
+}
+
+function now() {
+  return new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+}
+
+function fmtUptime(s) {
+  if (s < 60)   return s + 's';
+  if (s < 3600) return Math.floor(s/60) + 'm';
+  return Math.floor(s/3600) + 'h ' + Math.floor((s%3600)/60) + 'm';
+}
+
+function cpuClass(v)  { return v == null ? '' : v > 90 ? 'warn' : v > 70 ? 'warn' : 'good'; }
+function ramClass(v)  { return v == null ? '' : v > 85 ? 'warn' : 'good'; }
+function tempClass(v) { return v == null ? '' : v > 75 ? 'warn' : v > 60 ? 'warn' : 'good'; }
+</script>
+</body>
+</html>
