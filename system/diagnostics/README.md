@@ -25,7 +25,7 @@ bash dev-tools/system/diagnostics/enhanced_ubuntu_diagnostic.sh
 |---------|---------|
 | Hardware | CPU model, core count, architecture |
 | Memory | Total, used, available, swap |
-| Disk | All mounts, health status, loop device audit |
+| Disk | All mounts, usage %, health status, inode check |
 | Network | Active interfaces, IP addresses, default route |
 | Open Ports | Listening services via `ss` |
 | Security | UFW status, Fail2Ban, last failed SSH attempts |
@@ -46,5 +46,5 @@ The script is **read-only** — it inspects only, never modifies system state.
 
 - Post-install baseline check
 - Before a backup or upgrade
-- Diagnosing mounting or loop device issues
+- Troubleshooting unexpected service failures
 - Quick security posture snapshot
