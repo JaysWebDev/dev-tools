@@ -1,6 +1,22 @@
-# AI Appliance Setup
+# AI Appliance Setup 🖥️
 
-One-shot bootstrapper for a private local AI stack on a Linux machine. No cloud, no subscriptions.
+One-shot bootstrapper for a private local AI stack — no cloud, no subscriptions. Installs Ollama, pulls Qwen2.5-1.5B (~1GB), and sets up Open WebUI as a systemd service. Runs on any Ubuntu/Debian machine, CPU-only.
+
+Part of [dev-tools](../../README.md) · [jays.website/appdevelopment](https://jays.website/appdevelopment/)
+
+---
+
+### 1. Quick Setup 🚀
+
+```bash
+# Clone and run — installs everything in one shot
+git clone https://github.com/JaysWebDev/dev-tools.git
+sudo bash dev-tools/system/ai-appliance/setup-appliance.sh
+```
+
+After setup, open `http://localhost:3000` for the chat UI.
+
+---
 
 ## Stack
 

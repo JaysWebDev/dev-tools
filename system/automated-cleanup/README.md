@@ -1,6 +1,22 @@
-# Automated Cleanup
+# Cache Cleanup 🧹
 
-Scheduled maintenance scripts for backup retention and system cache cleanup. Designed to run via cron on a Linux home server.
+Clears Python bytecode, pip/npm caches, snap browser caches, fontconfig, mesa shader cache, and user trash. Machine-aware — uses `$HOME`, not hardcoded paths. Supports `--dry-run`. Safe to run anytime or schedule via cron.
+
+Part of [dev-tools](../../README.md) · [jays.website/tools](https://jays.website/tools/)
+
+---
+
+### Quick Run 🚀
+
+```bash
+# Preview what would be cleared (safe — no changes)
+curl -fsSL https://raw.githubusercontent.com/JaysWebDev/dev-tools/main/system/automated-cleanup/weekly_cache_cleanup.sh | bash -s -- --dry-run
+
+# Run it
+curl -fsSL https://raw.githubusercontent.com/JaysWebDev/dev-tools/main/system/automated-cleanup/weekly_cache_cleanup.sh | bash
+```
+
+---
 
 ## Scripts
 

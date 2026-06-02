@@ -1,6 +1,8 @@
-# HomeMind — Local AI Appliance Backend
+# HomeMind Appliance 🍓
 
-FastAPI inference server for running a local LLM on a Raspberry Pi 4 (ARM64). Offline-first — no cloud, no API keys.
+Local AI backend designed for a Raspberry Pi 4 (ARM64). FastAPI + llama-cpp-python inference server with streaming responses and a simple web chat UI. Runs fully offline — no cloud, no API keys required.
+
+Part of [dev-tools](../../README.md) · [jays.website/appdevelopment](https://jays.website/appdevelopment/)
 
 ## Stack
 
