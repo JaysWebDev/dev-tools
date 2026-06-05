@@ -17,6 +17,7 @@ Browse the live catalog at [jays.website/tools](https://jays.website/tools/).
 | [automated-cleanup](system/automated-cleanup/) | Clears Python bytecode, pip/npm caches, snap browser caches, and user trash. Uses `$HOME` — no hardcoded paths. Safe to cron. |
 | [ai-appliance](system/ai-appliance/) | One-command local AI stack: Ollama + Qwen2.5-1.5B + Open WebUI as a systemd service. No cloud, no subscriptions. |
 | [homemind](system/homemind/) | FastAPI inference server for a Raspberry Pi 4. Offline-first local LLM with streaming responses and a web chat UI. |
+| [usb-recovery](system/usb-recovery/) | Field-tested walkthrough for recovering headless Linux servers — Alpine rescue USB, SSH-over-network chroot, GRUB repair, netplan fix. No monitor needed. |
 
 ## App Development 🧰
 
@@ -28,30 +29,6 @@ Browse the live catalog at [jays.website/tools](https://jays.website/tools/).
 | [duplicate-detector](app-development/duplicate-detector/) | Recursively scans for duplicate files by MD5 hash. Size-first grouping for speed. Reports wasted space ranked by group. Optional JSON output. |
 | [file-organizer](app-development/file-organizer/) | Categorizes files by extension, strips EXIF/metadata before moving using exiftool. Confirm prompt before any changes — no surprises. |
 | [scraper-lab](app-development/scraper-lab/) | Modular web scraping toolkit with pluggable cleaning engines — phone, address, email, URL normalization. Generates quality reports per field. |
-
-## Agent 🤖
-
-AI agent utilities and orchestration tools.
-
-| Tool | Description |
-|------|-------------|
-| *(coming soon)* | — |
-
-## Business 📊
-
-Business intelligence and data analysis tools.
-
-| Tool | Description |
-|------|-------------|
-| *(coming soon)* | — |
-
-## Trading 📈
-
-Trading analysis and screening tools.
-
-| Tool | Description |
-|------|-------------|
-| *(coming soon)* | — |
 
 ---
 
